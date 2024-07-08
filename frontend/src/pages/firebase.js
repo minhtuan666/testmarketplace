@@ -3,17 +3,17 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/
 import { getFirestore, collection, addDoc } from 'firebase/firestore';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBK5jYhHHCxMNSnI5JBTEEpS6-gmbO0Yxs",
-    authDomain: "ltp-nft.firebaseapp.com",
-    projectId: "ltp-nft",
-    storageBucket: "ltp-nft.appspot.com",
-    messagingSenderId: "668434192847",
-    appId: "1:668434192847:web:af9f2b063aa4db6a3edaba",
-    measurementId: "G-3VLG6J5JZ4"
+    apiKey: "AIzaSyATpCr_Pv2DGbeJiP9GZvhyt2JHHm1nck4",
+    authDomain: "balbala-21141.firebaseapp.com",
+    projectId: "balbala-21141",
+    storageBucket: "balbala-21141.appspot.com",
+    messagingSenderId: "10407076481",
+    appId: "1:10407076481:web:d168268b13eca2a6a0e380",
+    measurementId: "G-99JC45XFYS"
 };
 
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
-const firestore = getFirestore(app);
+const db = getFirestore(app);
 
-export { storage, ref, uploadBytesResumable, getDownloadURL, collection, addDoc, firestore };
+export { storage, ref, uploadBytesResumable, getDownloadURL, collection, addDoc, db };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { firestore } from './firebase'; // Adjust the path to your Firebase config
+import { db } from './firebase'; // Adjust the path to your Firebase config
 import { doc, getDoc } from "firebase/firestore";
 import { ethers } from 'ethers';
 import NFTMarketplace from '../contract-api/NFTMarketplace.json'; // Adjust the path to your contract ABI
@@ -17,7 +17,7 @@ const DetailsNFT = () => {
   useEffect(() => {
     const fetchNFT = async () => {
       try {
-        const nftDoc = await getDoc(doc(firestore, "nfts", nftId));
+        const nftDoc = await getDoc(doc(db, "nfts", nftId));
         if (nftDoc.exists()) {
           setNft(nftDoc.data());
         } else {

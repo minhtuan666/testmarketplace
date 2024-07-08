@@ -4,7 +4,7 @@ import { Container, Row, Col, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Heart } from 'react-bootstrap-icons';
 import { collection, getDocs } from "firebase/firestore";
-import { firestore } from "./firebase"; // Adjust the path to your firebase config
+import { db } from "./firebase"; // Adjust the path to your firebase config
 import NFTMarketplace from '../contract-api/NFTMarketplace.json'; // Adjust the path to your contract ABI
 import '../styles/Home.css';
 
@@ -20,7 +20,7 @@ const Home = () => {
 
   const fetchNFTs = async () => {
     try {
-      const nftCollection = collection(firestore, "nfts");
+      const nftCollection = collection(db, "nfts");
       const nftSnapshot = await getDocs(nftCollection);
       const fetchedNFTs = nftSnapshot.docs.map(doc => ({
         id: doc.id,

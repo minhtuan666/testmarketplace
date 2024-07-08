@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Container, Form, Image } from "react-bootstrap";
 import { ethers } from "ethers";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage, firestore } from "./firebase"; // Adjust the path to your firebase config
+import { storage, db } from "./firebase"; // Adjust the path to your firebase config
 import { collection, addDoc } from "firebase/firestore";
 import NFTMarketplace from "../contract-api/NFTMarketplace.json"; // Adjust the path to your contract ABI
 
@@ -54,7 +54,7 @@ export default function MintNFT() {
                 price,
             };
 
-            await addDoc(collection(firestore, "nfts"), nftMetadata);
+            await addDoc(collection(db, "nfts"), nftMetadata);
 
             alert("NFT created and listed successfully!");
 
