@@ -1,67 +1,103 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import { Container, Row, Col, Form, Dropdown, Button } from 'react-bootstrap';
+import { Search, Heart } from 'react-bootstrap-icons';
 import { Link } from 'react-router-dom';
-import { Heart } from 'react-bootstrap-icons';
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "./firebase"; // Adjust the path to your firebase config
-import NFTMarketplace from '../contract-api/NFTMarketplace.json'; // Adjust the path to your contract ABI
 import '../styles/Home.css';
-
-const CONTRACT_ADDRESS = "0xc19CfaB505A2d9BaA60640410Ef5D6B1B2e15bdD";
+import newNFT from '../contract-api/newNFT.json';
+import addressContract from '../contract-api/addressContract';
 
 const Home = () => {
   const [nfts, setNfts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedFileType, setSelectedFileType] = useState('');
+  const [selectedPriceRange, setSelectedPriceRange] = useState('');
   const [hoveredNFT, setHoveredNFT] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchNFTs();
-  }, []);
-
-  const fetchNFTs = async () => {
+  const initContract = useCallback(async () => {
     try {
-      const nftCollection = collection(db, "nfts");
-      const nftSnapshot = await getDocs(nftCollection);
-      const fetchedNFTs = nftSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setNfts(fetchedNFTs);
-    } catch (error) {
-      console.error("Error fetching NFTs:", error);
-    }
-  };
-
-  const handleMouseEnter = (nftId) => {
-    setHoveredNFT(nftId);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredNFT(null);
-  };
-
-  const handleBuyNow = async (nft) => {
-    try {
-      // Request account access if needed
-      await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-      // Connect to MetaMask
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, NFTMarketplace.abi, signer);
+      const contract = new ethers.Contract(addressContract, newNFT.abi, signer);
 
-      // Call the createMarketSale function
-      const transaction = await contract.createMarketSale(nft.tokenId, {
-        value: ethers.utils.parseEther(nft.price)
-      });
+      const allTokenIds = await contract.getAllTokenIds();
+      const nftDetails = await Promise.all(
+        allTokenIds.map(async (tokenId) => {
+          try {
+            const [name, description, creator, ownerHex, price, likesHex, imageUrl] = await contract.getNFTInfo(tokenId);
+            const owner = ethers.utils.getAddress(ownerHex);
+            const likes = parseInt(likesHex._hex);
 
-      await transaction.wait();
-      console.log(`NFT purchased: ${nft.name}`);
-      fetchNFTs(); // Refresh the NFT list after purchase
+            return { tokenId, name, description, creator, owner, price, likes, imageUrl };
+          } catch (error) {
+            console.error(`Error fetching details for tokenId ${tokenId}:`, error);
+            return { tokenId, name: 'N/A', description: 'N/A', creator: 'N/A', owner: 'N/A', price: ethers.BigNumber.from(0), likes: 0, imageUrl: '' };
+          }
+        })
+      );
+
+      const filteredNfts = nftDetails.filter(nft => nft.creator !== '0x0000000000000000000000000000000000000000');
+      setNfts(filteredNfts);
     } catch (error) {
-      console.error("Error buying NFT:", error);
+      console.error('Error fetching NFTs:', error);
+      setError('An error occurred while fetching NFTs. Please try again.');
+    } finally {
+      setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    if (window.ethereum) {
+      initContract();
+    } else {
+      console.warn('MetaMask not detected');
+      setError('MetaMask not detected. Please install MetaMask and refresh the page.');
+      setLoading(false);
+    }
+  }, [initContract]);
+
+  const formatAddress = (address) => {
+    if (!address) return '';
+    return `${address.slice(0, 7)}...${address.slice(-5)}`;
   };
+
+  const categories = useMemo(() => [...new Set(nfts.map(nft => nft.category))], [nfts]);
+  const filetypes = useMemo(() => [...new Set(nfts.map(nft => nft.filetype))], [nfts]);
+  const priceRanges = useMemo(() => ['1-5', '6-10', '11-15', '16-20', '>20'], []);
+
+  const filteredNFTs = useMemo(() => {
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return nfts.filter(nft => {
+      const matchesSearch = nft.name.toLowerCase().includes(lowerSearchTerm);
+      const matchesCategory = !selectedCategory || nft.category === selectedCategory;
+      const matchesFileType = !selectedFileType || nft.filetype === selectedFileType;
+
+      const matchesPriceRange = !selectedPriceRange || (
+        selectedPriceRange === '1-5' && nft.price >= 1 && nft.price <= 5 ||
+        selectedPriceRange === '6-10' && nft.price >= 6 && nft.price <= 10 ||
+        selectedPriceRange === '11-15' && nft.price >= 11 && nft.price <= 15 ||
+        selectedPriceRange === '16-20' && nft.price >= 16 && nft.price <= 20 ||
+        selectedPriceRange === '>20' && nft.price > 20
+      );
+
+      return matchesSearch && matchesCategory && matchesFileType && matchesPriceRange;
+    });
+  }, [nfts, searchTerm, selectedCategory, selectedFileType, selectedPriceRange]);
+
+  const handleMouseEnter = useCallback((tokenId) => {
+    setHoveredNFT(tokenId);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredNFT(null);
+  }, []);
+
+  const handleBuyNow = useCallback((nft) => {
+    console.log(`Buying NFT: ${nft.name}`);
+  }, []);
 
   return (
     <Container className="home-container">
@@ -82,28 +118,29 @@ const Home = () => {
 
         <h3 className="whatsNew">What is new?</h3>
         <Row className="g-4">
-          {nfts.map((nft) => (
-            <Col key={nft.id} xs={12} sm={6} md={3}>
-              <Link to={`/details-nft/${nft.id}`} className="nftCardLink">
+          {loading && <p>Loading NFTs...</p>}
+          {error && <p className="text-danger">{error}</p>}
+          {!loading && !error && filteredNFTs.map((nft, index) => (
+            <Col key={nft.tokenId} xs={12} sm={6} md={3} className={`g-4 ${index >= 4 ? 'mt-4' : ''}`}>
+              <Link to={`/details-nft/${nft.tokenId}`} className="nftCardLink">
                 <div
-                  className={`nftCard ${hoveredNFT === nft.id ? 'hovered' : ''}`}
-                  onMouseEnter={() => handleMouseEnter(nft.id)}
+                  className={`nftCard ${hoveredNFT === nft.tokenId ? 'hovered' : ''}`}
+                  onMouseEnter={() => handleMouseEnter(nft.tokenId)}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <img src={nft.image} alt={nft.name} className="nftImage" />
-                  {hoveredNFT === nft.id && (
+                  <img src={nft.imageUrl} alt={nft.name} className="nftImage" />
+                  {hoveredNFT === nft.tokenId && (
                     <div className="nftInfo">
                       <div className="nftDetails1">
                         <p className="nftTitle">{nft.name}</p>
-                        <p className="nftAuthor">Author: {nft.creator}</p>
-                        <p className="nftDate">{nft.date}</p>
-                        <Button className="buyButton" onClick={(e) => { e.preventDefault(); handleBuyNow(nft); }}>
+                        <p className="nftAuthor">Creator: {formatAddress(nft.creator)}</p>
+                        <p className="nftAuthor">Owner: {formatAddress(nft.owner)}</p>
+                        <Button className="buyButton" onClick={() => handleBuyNow(nft)}>
                           Buy now
                         </Button>
                       </div>
                       <div className="nftDetails2">
-                        <p className="nftLTP">{nft.LTP} LTP</p>
-                        <p className="nftPrice">{nft.price} ETH</p>
+                        <p className="nftPrice">{ethers.utils.formatEther(nft.price)} ETH</p>
                         <div className="likeContainer">
                           <Heart className="heartIcon" />
                           <span className="likeCount">{nft.likes}</span>
