@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from 'react';
 import { Button, Container, Form, Image } from 'react-bootstrap';
 import { ethers } from 'ethers';
@@ -5,6 +6,14 @@ import { storage, ref, uploadBytesResumable, getDownloadURL, collection, addDoc,
 import addressContract from '../contract-api/addressContract';
 import newNFT from "../contract-api/newNFT.json";
 import SuccessAlert from './SuccessAlert';
+=======
+import { useState } from "react";
+import { Button, Container, Form, Image } from "react-bootstrap";
+import { ethers } from "ethers";
+import { storage, ref, uploadBytesResumable, getDownloadURL, collection, addDoc, db, doc, getDoc } from "./firebase"; // Import Firebase functions for storage and Firestore
+import addressContract from '../contract-api/addressContract';
+import newNFT from "../contract-api/newNFT.json";
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
 
 export default function MintNFT() {
     const [name, setName] = useState("");
@@ -21,20 +30,37 @@ export default function MintNFT() {
 
     const handleCreate = async () => {
         try {
+<<<<<<< HEAD
             const fileInput = document.getElementById("file-input");
             const file = fileInput.files[0];
             const tokenId = Math.floor(Math.random() * 1000000);
+=======
+            // Step 1: Upload image to Firebase Storage and save tokenId and imageUrl to Firestore
+            const fileInput = document.getElementById("file-input");
+            const file = fileInput.files[0];
+            const tokenId = Math.floor(Math.random() * 1000000); // Generate a random tokenId for Firestore
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
 
             const storageRef = ref(storage, `images/${tokenId}/${file.name}`);
             const uploadTask = uploadBytesResumable(storageRef, file);
 
             uploadTask.on(
                 "state_changed",
+<<<<<<< HEAD
                 (snapshot) => {},
+=======
+                (snapshot) => {
+                    // Track progress here if needed
+                },
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
                 (error) => {
                     console.error("Error uploading image:", error);
                 },
                 async () => {
+<<<<<<< HEAD
+=======
+                    // Step 2: Get download URL and save to Firestore
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
                     const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
                     const docRef = await addDoc(collection(db, "nfts"), {
                         tokenId: tokenId,
@@ -42,16 +68,28 @@ export default function MintNFT() {
                     });
                     console.log("Document written with ID: ", docRef.id);
 
+<<<<<<< HEAD
+=======
+                    // Step 3: Fetch the imageUrl from Firestore using docRef.id
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
                     const docSnap = await getDoc(doc(db, "nfts", docRef.id));
                     if (docSnap.exists()) {
                         const data = docSnap.data();
                         const imageUrl = data.imageUrl;
 
+<<<<<<< HEAD
                         const tx = await contract.mintNFT(name, imageUrl, description, ethers.utils.parseEther(price), imageUrl);
                         await tx.wait();
 
                         console.log("NFT minted successfully!");
                         setShowSuccess(true);
+=======
+                        // Step 4: Mint NFT with name, imageUrl, description, price, and imageURL
+                        const tx = await contract.mintNFT(name, imageUrl, description, ethers.utils.parseEther(price), imageUrl);
+                        await tx.wait(); // Wait for the transaction to be mined
+
+                        console.log("NFT minted successfully!");
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
                     } else {
                         console.error("No such document!");
                     }

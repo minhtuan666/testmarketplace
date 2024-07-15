@@ -5,10 +5,17 @@ import { Link } from 'react-router-dom';
 import { Heart } from 'react-bootstrap-icons';
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "./firebase"; // Adjust the path to your firebase config
+<<<<<<< HEAD
 import NFTMarketplace from '../contract-api/NFTMarketplace.json'; // Adjust the path to your contract ABI
 import '../styles/Home.css';
 
 const CONTRACT_ADDRESS = "0xc19CfaB505A2d9BaA60640410Ef5D6B1B2e15bdD";
+=======
+//import NFTMarketplace from '../contract-api/NFTMarketplace.json'; // Adjust the path to your contract ABI
+import '../styles/Home.css';
+
+//const CONTRACT_ADDRESS = "0xc19CfaB505A2d9BaA60640410Ef5D6B1B2e15bdD";
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
 
 const Home = () => {
   const [nfts, setNfts] = useState([]);
@@ -40,7 +47,11 @@ const Home = () => {
     setHoveredNFT(null);
   };
 
+<<<<<<< HEAD
   const handleBuyNow = async (nft) => {
+=======
+  /*const handleBuyNow = async (nft) => {
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
     try {
       // Request account access if needed
       await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -61,7 +72,11 @@ const Home = () => {
     } catch (error) {
       console.error("Error buying NFT:", error);
     }
+<<<<<<< HEAD
   };
+=======
+  };*/
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
 
   return (
     <Container className="home-container">
@@ -95,7 +110,11 @@ const Home = () => {
                     <div className="nftInfo">
                       <div className="nftDetails1">
                         <p className="nftTitle">{nft.name}</p>
+<<<<<<< HEAD
                         <p className="nftAuthor">Author: {nft.creator}</p>
+=======
+                        <p className="nftAuthor">Author: {nft.seller}</p>
+>>>>>>> f2cdfa502a511fcbd9e69bb4506248b5a5276473
                         <p className="nftDate">{nft.date}</p>
                         <Button className="buyButton" onClick={(e) => { e.preventDefault(); handleBuyNow(nft); }}>
                           Buy now
